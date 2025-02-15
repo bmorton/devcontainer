@@ -1,0 +1,86 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
+{
+  "name": "bmorton/devcontainer",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.24.0"
+    },
+    "ghcr.io/devcontainers-extra/features/ruby-asdf:0": {
+      "version": "3.4.1"
+    },
+    "ghcr.io/devcontainers/features/rust:1": {},
+    "ghcr.io/devcontainers/features/ruby:1": {},
+    "ghcr.io/devcontainers/features/sshd:1": {},
+  },
+  "overrideFeatureInstallOrder": ["ghcr.io/devcontainers/features/rust"],
+
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  // "postCreateCommand": "yarn install",
+
+  // Configure tool-specific properties.
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // General development
+        "eamodio.gitlens",
+        "sourcegraph.cody-ai",
+
+        // Ruby extensions
+        "shopify.ruby-lsp",
+        "aki77.rails-db-schema",
+
+        // Go extensions
+        "golang.go",
+      ],
+      "settings": {
+        // Ruby settings
+        "ruby.useBundler": true,
+        "ruby.format": "rubocop",
+        "rubyLsp.formatter": "rubocop",
+        "rubyLsp.enabledFeatures": {
+          "documentHighlights": true,
+          "documentSymbols": true,
+          "foldingRanges": true,
+          "selectionRanges": true,
+          "semanticHighlighting": true,
+          "formatting": true,
+          "codeActions": true,
+          "diagnostics": true
+        },
+        "ruby.lint": {
+          "rubocop": true
+        },
+
+        // Go settings
+        "go.useLanguageServer": true,
+        "go.lintTool": "golangci-lint",
+        "go.formatTool": "goimports",
+        "[go]": {
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+          }
+        },
+
+        // General settings
+        "editor.formatOnSave": true,
+        "editor.rulers": [80, 120],
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true
+      }
+    }
+  },
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
+}
