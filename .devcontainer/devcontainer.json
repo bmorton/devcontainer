@@ -10,11 +10,10 @@
       "version": "1.24.0"
     },
     "ghcr.io/devcontainers-extra/features/ruby-asdf:0": {
-      "version": "3.4.1"
+      "version": "3.4.4"
     },
     "ghcr.io/devcontainers/features/rust:1": {},
-    "ghcr.io/devcontainers/features/ruby:1": {},
-    "ghcr.io/devcontainers/features/sshd:1": {},
+    "ghcr.io/devcontainers/features/sshd:1": {}
   },
   "overrideFeatureInstallOrder": ["ghcr.io/devcontainers/features/rust"],
 
