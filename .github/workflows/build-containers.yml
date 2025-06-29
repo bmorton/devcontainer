@@ -1,0 +1,44 @@
+name: Build Containers
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-dockerfile:
+    name: Build Dockerfile
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Dockerfile
+      run: |
+        echo "Building Dockerfile..."
+        docker build -t devcontainer-dockerfile .devcontainer/
+        echo "Dockerfile build completed successfully"
+
+  build-devcontainer:
+    name: Build Devcontainer
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Install devcontainer CLI
+      run: |
+        npm install -g @devcontainers/cli
+
+    - name: Build devcontainer
+      run: |
+        echo "Building devcontainer..."
+        devcontainer build --workspace-folder .
+        echo "Devcontainer build completed successfully"
