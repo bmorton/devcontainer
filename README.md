@@ -4,6 +4,10 @@ This is my personal devcontainer for VSCode.
 
 ## Tools Included
 
+### kubectl
+
+This devcontainer includes the latest stable version of kubectl for Kubernetes development and management tasks. kubectl is automatically installed during container build and is available in the PATH.
+
 ### Anthropic Claude Code CLI
 
 This devcontainer includes the [Anthropic Claude Code CLI](https://github.com/anthropics/claude-code), an agentic coding tool that helps you code faster through natural language commands.

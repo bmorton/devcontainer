@@ -4,7 +4,13 @@ RUN apt-get update -y && \
       apt-get install -y \
         build-essential \
         git \
-        postgresql-client
+        postgresql-client \
+        curl
+
+# Install kubectl (latest stable version)
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+    chmod +x kubectl && \
+    mv kubectl /usr/local/bin/
 
 # Install Anthropic Claude Code CLI
 RUN npm install -g @anthropic-ai/claude-code
