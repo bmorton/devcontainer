@@ -24,7 +24,7 @@
   // "forwardPorts": [],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "yarn install",
+  "postCreateCommand": "kubectl version --client --short 2>/dev/null || kubectl version --client 2>/dev/null",
 
   // Configure tool-specific properties.
   "customizations": {
@@ -40,6 +40,9 @@
 
         // Go extensions
         "golang.go",
+
+        // Kubernetes extensions
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
       ],
       "settings": {
         // Ruby settings
