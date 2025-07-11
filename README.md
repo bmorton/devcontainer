@@ -45,7 +45,7 @@ For more information, see the [official Claude Code documentation](https://docs.
 
 ### opencode-ai
 
-This devcontainer includes [opencode-ai](https://www.npmjs.com/package/opencode-ai) version 0.1.194, an AI coding agent built for the terminal with responsive UI and automatic LSP loading capabilities.
+This devcontainer includes [opencode-ai](https://www.npmjs.com/package/opencode-ai), an AI coding agent built for the terminal with responsive UI and automatic LSP loading capabilities.
 
 #### Features
 
