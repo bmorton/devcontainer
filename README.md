@@ -42,3 +42,32 @@ claude
 ```
 
 For more information, see the [official Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code/overview).
+
+### opencode-ai
+
+This devcontainer includes [opencode-ai](https://www.npmjs.com/package/opencode-ai) version 0.1.194, an AI coding agent built for the terminal with responsive UI and automatic LSP loading capabilities.
+
+#### Features
+
+- Responsive terminal UI
+- Automatic LSP (Language Server Protocol) loading
+- Support for multiple agents working in parallel
+- AI-powered coding assistance
+
+#### Usage
+
+You can use opencode-ai directly from the terminal:
+
+```bash
+# Navigate to your project directory
+cd /workspaces/your-project
+
+# Start opencode-ai
+opencode
+
+# opencode-ai provides:
+# - AI-powered code generation and editing
+# - Intelligent code suggestions
+# - Terminal-based coding assistance
+# - Multi-agent support for complex tasks
+```
