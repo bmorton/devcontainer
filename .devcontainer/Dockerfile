@@ -15,6 +15,9 @@ RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/s
 # Install Anthropic Claude Code CLI
 RUN npm install -g @anthropic-ai/claude-code
 
+# Install opencode-ai (AI coding agent for terminal)
+RUN npm install -g opencode-ai
+
 # Authentication setup for Claude Code CLI:
 # Set your Anthropic API key as an environment variable
 # Example: export ANTHROPIC_API_KEY=your_api_key_here
