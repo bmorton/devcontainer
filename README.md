@@ -43,6 +43,34 @@ claude
 
 For more information, see the [official Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code/overview).
 
+### Coder CLI
+
+This devcontainer includes the [Coder CLI](https://coder.com), a command-line interface for Coder, a cloud-based development environment platform that allows you to create and manage remote development environments.
+
+#### Usage
+
+The Coder CLI allows you to:
+
+```bash
+# Login to your Coder deployment
+coder login <your-coder-url>
+
+# List available workspaces
+coder list
+
+# Create a new workspace
+coder create
+
+# Connect to a workspace via SSH
+coder ssh <workspace-name>
+
+# Start/stop workspaces
+coder start <workspace-name>
+coder stop <workspace-name>
+```
+
+For more information, see the [official Coder documentation](https://coder.com/docs).
+
 ### opencode-ai
 
 This devcontainer includes [opencode-ai](https://www.npmjs.com/package/opencode-ai), an AI coding agent built for the terminal with responsive UI and automatic LSP loading capabilities.

@@ -18,6 +18,9 @@ RUN npm install -g @anthropic-ai/claude-code
 # Install opencode-ai (AI coding agent for terminal)
 RUN npm install -g opencode-ai
 
+# Install Coder CLI
+RUN curl -L https://coder.com/install.sh | sh
+
 # Authentication setup for Claude Code CLI:
 # Set your Anthropic API key as an environment variable
 # Example: export ANTHROPIC_API_KEY=your_api_key_here
