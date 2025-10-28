@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/typescript-node:0-20
+FROM mcr.microsoft.com/devcontainers/typescript-node:0-24
 
 RUN apt-get update -y && \
       apt-get install -y \

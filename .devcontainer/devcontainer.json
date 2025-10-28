@@ -7,10 +7,10 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/go:1": {
-      "version": "1.24.5"
+      "version": "1.25.3"
     },
     "ghcr.io/devcontainers-extra/features/ruby-asdf:0": {
-      "version": "3.4.4"
+      "version": "3.4.7"
     },
     "ghcr.io/devcontainers/features/rust:1": {},
     "ghcr.io/devcontainers/features/sshd:1": {}
