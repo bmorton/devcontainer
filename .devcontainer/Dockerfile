@@ -5,7 +5,13 @@ RUN apt-get update -y && \
         build-essential \
         git \
         postgresql-client \
-        curl
+        curl \
+        htop \
+        tmux
+
+# Wire up the tmux configuration for the default container user (node)
+COPY tmux.conf /home/node/.tmux.conf
+RUN chown node:node /home/node/.tmux.conf
 
 # Install kubectl (latest stable version)
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
@@ -17,6 +23,9 @@ RUN npm install -g @anthropic-ai/claude-code
 
 # Install opencode-ai (AI coding agent for terminal)
 RUN npm install -g opencode-ai
+
+# Install GitHub Copilot CLI
+RUN npm install -g @github/copilot
 
 # Authentication setup for Claude Code CLI:
 # Set your Anthropic API key as an environment variable
