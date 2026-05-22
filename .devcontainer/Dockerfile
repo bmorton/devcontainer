@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/typescript-node:0-20
+FROM mcr.microsoft.com/devcontainers/typescript-node:24-bookworm
 
 RUN apt-get update -y && \
       apt-get install -y \
@@ -12,6 +12,10 @@ RUN apt-get update -y && \
 # Wire up the tmux configuration for the default container user (node)
 COPY tmux.conf /home/node/.tmux.conf
 RUN chown node:node /home/node/.tmux.conf
+
+# Also wire up tmux configuration for root (used when connecting via `coder ssh`)
+COPY tmux.conf /root/.tmux.conf
+RUN chown root:root /root/.tmux.conf
 
 # Install kubectl (latest stable version)
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
