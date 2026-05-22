@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/typescript-node:1-24-bookworm
+FROM mcr.microsoft.com/devcontainers/typescript-node:24-bookworm
 
 RUN apt-get update -y && \
       apt-get install -y \
