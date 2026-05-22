@@ -6,6 +6,9 @@
     "dockerfile": "Dockerfile"
   },
   "features": {
+    "ghcr.io/devcontainers-extra/features/apt-packages:1": {
+      "packages": "build-essential,git,postgresql-client,curl,htop,tmux,vim"
+    },
     "ghcr.io/devcontainers/features/go:1": {
       "version": "1.26.3"
     },
@@ -13,7 +16,11 @@
       "version": "4.0.5"
     },
     "ghcr.io/devcontainers/features/rust:1": {},
-    "ghcr.io/devcontainers/features/sshd:1": {}
+    "ghcr.io/devcontainers/features/sshd:1": {},
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
+    "ghcr.io/devcontainers/features/copilot-cli:1": {},
+    "ghcr.io/devcontainers-extra/features/claude-code:2": {},
+    "ghcr.io/devcontainers-extra/features/opencode:1": {}
   },
   "overrideFeatureInstallOrder": ["ghcr.io/devcontainers/features/rust"],
 

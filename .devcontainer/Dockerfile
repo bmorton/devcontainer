@@ -1,14 +1,5 @@
 FROM mcr.microsoft.com/devcontainers/typescript-node:24-bookworm
 
-RUN apt-get update -y && \
-      apt-get install -y \
-        build-essential \
-        git \
-        postgresql-client \
-        curl \
-        htop \
-        tmux
-
 # Wire up the tmux configuration for the default container user (node)
 COPY tmux.conf /home/node/.tmux.conf
 RUN chown node:node /home/node/.tmux.conf
@@ -16,23 +7,3 @@ RUN chown node:node /home/node/.tmux.conf
 # Also wire up tmux configuration for root (used when connecting via `coder ssh`)
 COPY tmux.conf /root/.tmux.conf
 RUN chown root:root /root/.tmux.conf
-
-# Install kubectl (latest stable version)
-RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
-    chmod +x kubectl && \
-    mv kubectl /usr/local/bin/
-
-# Install Anthropic Claude Code CLI
-RUN npm install -g @anthropic-ai/claude-code
-
-# Install opencode-ai (AI coding agent for terminal)
-RUN npm install -g opencode-ai
-
-# Install GitHub Copilot CLI
-RUN npm install -g @github/copilot
-
-# Authentication setup for Claude Code CLI:
-# Set your Anthropic API key as an environment variable
-# Example: export ANTHROPIC_API_KEY=your_api_key_here
-# Or create a .env file in your project with: ANTHROPIC_API_KEY=your_api_key_here
-# Get your API key from: https://console.anthropic.com/account/keys
