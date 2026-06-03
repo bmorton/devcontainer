@@ -23,6 +23,11 @@
     "ghcr.io/devcontainers-extra/features/opencode:1": {},
     "ghcr.io/devcontainers-extra/features/npm-package:1": {
       "package": "@openprose/prose-cli"
+    },
+    "ghcr.io/devcontainers-extra/features/gh-release:1": {
+      "repo": "pranshuparmar/witr",
+      "binaryNames": "witr",
+      "assetRegex": "^witr-linux-(amd64|arm64)$"
     }
   },
   "overrideFeatureInstallOrder": ["ghcr.io/devcontainers/features/rust"],
