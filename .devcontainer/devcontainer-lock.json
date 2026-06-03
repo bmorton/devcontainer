@@ -10,6 +10,16 @@
       "resolved": "ghcr.io/devcontainers-extra/features/claude-code@sha256:37b0d444a704021ee5f6d24242a4621bf337867d110e4e3c06b863a3a78122ac",
       "integrity": "sha256:37b0d444a704021ee5f6d24242a4621bf337867d110e4e3c06b863a3a78122ac"
     },
+    "ghcr.io/devcontainers-extra/features/gh-release:1": {
+      "version": "1.0.26",
+      "resolved": "ghcr.io/devcontainers-extra/features/gh-release@sha256:09be4373c696a6a457dad170233c76934ae250edfda0e126f8617fcb41bdd418",
+      "integrity": "sha256:09be4373c696a6a457dad170233c76934ae250edfda0e126f8617fcb41bdd418"
+    },
+    "ghcr.io/devcontainers-extra/features/npm-package:1": {
+      "version": "1.0.4",
+      "resolved": "ghcr.io/devcontainers-extra/features/npm-package@sha256:ee315c064588643e1178eec33275efa55739f43761fc965b95a5d05eed70c76d",
+      "integrity": "sha256:ee315c064588643e1178eec33275efa55739f43761fc965b95a5d05eed70c76d"
+    },
     "ghcr.io/devcontainers-extra/features/opencode:1": {
       "version": "1.0.0",
       "resolved": "ghcr.io/devcontainers-extra/features/opencode@sha256:7c15617cc9e501bc218097adc4910a00f81ed52fc5a5eef463aa1cc01317f9ba",
