@@ -27,6 +27,16 @@ My personal devcontainer for VSCode.
 - htop
 - tmux
 - vim
+- gnome-keyring / libsecret (Linux Secret Service for VS Code SecretStorage)
+
+## Secret storage
+
+A per-container Linux Secret Service (`gnome-keyring`) is started on
+container start/attach so VS Code's `SecretStorage` / `keytar` /
+`libsecret` consumers (including GitHub Copilot) store credentials in a
+local encrypted vault instead of VS Code's plaintext fallback. See
+`.devcontainer/keyring-init.sh` and `.devcontainer/keyring-bootstrap.py`.
+
 
 ## VSCode extensions
 
