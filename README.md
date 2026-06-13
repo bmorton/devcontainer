@@ -13,6 +13,7 @@ My personal devcontainer for VSCode.
 - Rust
 - sshd
 - kubectl / helm / minikube
+- GitHub CLI (`gh`)
 - GitHub Copilot CLI
 - Anthropic Claude Code
 - opencode
@@ -36,3 +37,24 @@ My personal devcontainer for VSCode.
 - aki77.rails-db-schema
 - golang.go
 - ms-kubernetes-tools.vscode-kubernetes-tools
+
+## GitHub MCP server with the Copilot CLI
+
+The GitHub Copilot CLI ships with GitHub's MCP server enabled by default, so no
+extra MCP configuration is required to talk to GitHub from `copilot`. The CLI (and
+its bundled GitHub MCP server) authenticate with the same GitHub credentials.
+
+To wire everything up inside the container:
+
+1. Authenticate the GitHub CLI: `gh auth login` (or set `GH_TOKEN` / `GITHUB_TOKEN`).
+2. Launch the Copilot CLI: `copilot`. If you are not already authenticated, run the
+   `/login` slash command, or export a token before launching:
+
+   ```bash
+   export GH_TOKEN="$(gh auth token)"
+   copilot
+   ```
+
+3. Confirm the GitHub MCP server is available from within `copilot` with the `/mcp`
+   slash command, then ask Copilot to interact with your repositories, issues, and
+   pull requests.
