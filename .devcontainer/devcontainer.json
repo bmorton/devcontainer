@@ -19,7 +19,7 @@
     "ghcr.io/devcontainers/features/sshd:1": {},
     "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/copilot-cli:1": {},
+    "ghcr.io/devcontainers/features/copilot-cli:": {},
     "ghcr.io/devcontainers-extra/features/claude-code:2": {},
     "ghcr.io/devcontainers-extra/features/opencode:1": {},
     "ghcr.io/devcontainers-extra/features/npm-package:1": {
