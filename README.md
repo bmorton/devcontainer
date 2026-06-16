@@ -18,6 +18,7 @@ My personal devcontainer for VSCode.
 - Anthropic Claude Code
 - opencode
 - `@openprose/prose-cli` (npm)
+- Namespace CLI (`nsc`)
 
 ## APT packages
 
