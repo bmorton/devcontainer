@@ -28,6 +28,21 @@
   },
   "overrideFeatureInstallOrder": ["ghcr.io/devcontainers/features/rust"],
 
+  // Predictable bus + runtime dir so EVERY VS Code Server child process
+  // (extensions, terminals, tasks) finds the same gnome-keyring instance.
+  // Without it, extensions race the postStartCommand and fall back to the
+  // plaintext SecretStorage store. UID 1000 is the `node` user.
+  "remoteEnv": {
+    "XDG_RUNTIME_DIR": "/tmp/runtime-1000",
+    "DBUS_SESSION_BUS_ADDRESS": "unix:path=/tmp/runtime-1000/bus"
+  },
+
+  // postStartCommand fires on every container start (incl. Codespaces resume).
+  // postAttachCommand fires on every VS Code reconnect, so a crashed daemon
+  // is restarted without rebuilding the container.
+  "postStartCommand": ".devcontainer/keyring-init.sh",
+  "postAttachCommand": ".devcontainer/keyring-init.sh",
+
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},
 
