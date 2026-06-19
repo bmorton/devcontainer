@@ -31,6 +31,12 @@
   },
   "overrideFeatureInstallOrder": ["ghcr.io/devcontainers/features/rust"],
 
+  // Don't remap the container user's UID/GID to match the host user. The sshd
+  // feature creates an `ssh` group at GID 1001, which collides with the host
+  // UID/GID (1001) used by CI runners. The CLI's automatic remap then fails with
+  // `groupmod: GID '1001' already exists`, breaking `devcontainer up`.
+  "updateRemoteUserUID": false,
+
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},
 
