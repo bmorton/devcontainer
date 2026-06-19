@@ -10,7 +10,8 @@
 # It asserts the things that have previously broken on Coder/envbuilder:
 #   1. the effective user is `node`, not root,
 #   2. tmux is on PATH and can start a session that reads ~/.tmux.conf,
-#   3. the lifecycle ran to completion (postCreateCommand sentinel exists).
+#   3. the lifecycle ran to completion (postCreateCommand sentinel exists),
+#   4. `/workspaces` is writable by `node` (so `git clone` into it works).
 #
 # Any failed check exits non-zero so CI fails loudly instead of silently
 # dropping you into a broken shell.
@@ -78,6 +79,21 @@ if [ -f "$sentinel" ]; then
   pass "lifecycle sentinel present ($sentinel)"
 else
   fail "lifecycle sentinel missing ($sentinel); postCreateCommand did not complete"
+fi
+
+# 4. `/workspaces` must be writable by the current user so cloning repos into it
+# (e.g. `git clone ...` from `/workspaces`) doesn't fail with "Permission denied".
+workspaces_dir="/workspaces"
+if [ -d "$workspaces_dir" ]; then
+  probe="${workspaces_dir}/.verify-write-$$"
+  if (umask 022 && mkdir "$probe") 2>/dev/null; then
+    pass "/workspaces is writable by $(id -un)"
+    rmdir "$probe" 2>/dev/null || true
+  else
+    fail "/workspaces is not writable by $(id -un); 'git clone' into it will fail"
+  fi
+else
+  fail "/workspaces does not exist"
 fi
 
 echo "=== Verification complete ==="

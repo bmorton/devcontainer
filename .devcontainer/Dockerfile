@@ -20,6 +20,13 @@ RUN npm install -g playwright \
     && playwright install --with-deps chromium \
     && chmod -R a+rx /ms-playwright
 
+# Make `/workspaces` owned by the non-root `node` user so cloning repos into it
+# works. The base image creates `/workspaces` as root, and envbuilder (used by
+# Coder) does not chown the workspace to the target user, so `node` otherwise
+# can't create directories there:
+#   git clone ... -> fatal: could not create work tree dir: Permission denied
+RUN mkdir -p /workspaces && chown node:node /workspaces
+
 # Tell dev container features where the target user's home directory is.
 # The devcontainer CLI passes `_REMOTE_USER_HOME`/`_CONTAINER_USER_HOME` to every
 # feature's install.sh, but envbuilder (used by Coder) only sets `_REMOTE_USER`
