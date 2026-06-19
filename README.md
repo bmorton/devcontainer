@@ -14,11 +14,13 @@ My personal devcontainer for VSCode.
 - sshd
 - kubectl / helm / minikube
 - GitHub CLI (`gh`)
+- Azure CLI (`az`, latest)
 - GitHub Copilot CLI
 - Anthropic Claude Code
 - opencode
 - `@openprose/prose-cli` (npm)
 - Namespace CLI (`nsc`)
+- Playwright with the Chromium browser (and required OS dependencies)
 
 ## APT packages
 
