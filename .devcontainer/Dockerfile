@@ -20,6 +20,21 @@ RUN npm install -g playwright \
     && playwright install --with-deps chromium \
     && chmod -R a+rx /ms-playwright
 
+# Tell dev container features where the target user's home directory is.
+# The devcontainer CLI passes `_REMOTE_USER_HOME`/`_CONTAINER_USER_HOME` to every
+# feature's install.sh, but envbuilder (used by Coder) only sets `_REMOTE_USER`
+# and `_CONTAINER_USER` -- it leaves the *_HOME variables empty. Features that
+# rely on them then break: e.g. the claude-code feature runs
+# `cp "$_REMOTE_USER_HOME/.local/bin/claude" /usr/local/bin/claude`, which under
+# envbuilder expands to `cp /.local/bin/claude ...` and fails the whole build.
+# Supplying the values here (as build ARGs, so they don't leak into the running
+# container's environment) keeps feature installs working on the envbuilder path.
+# ARGs declared here remain in scope for the feature install steps envbuilder
+# appends after this Dockerfile, but reset for the devcontainer CLI (which sets
+# these variables itself), so this is a no-op there.
+ARG _REMOTE_USER_HOME=/home/node
+ARG _CONTAINER_USER_HOME=/home/node
+
 # Default to the non-root `node` user. envbuilder (used by Coder) picks its target
 # user from the last `USER` directive when `containerUser`/`remoteUser` are not
 # applied from image metadata, so make the intended user explicit here to avoid
