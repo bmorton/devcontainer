@@ -38,7 +38,7 @@
   // "forwardPorts": [],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "kubectl version --client --short 2>/dev/null || kubectl version --client 2>/dev/null",
+  "postCreateCommand": "kubectl version --client 2>/dev/null || true",
 
   // Configure tool-specific properties.
   "customizations": {
