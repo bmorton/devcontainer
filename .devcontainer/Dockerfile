@@ -19,3 +19,9 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN npm install -g playwright \
     && playwright install --with-deps chromium \
     && chmod -R a+rx /ms-playwright
+
+# Default to the non-root `node` user. envbuilder (used by Coder) picks its target
+# user from the last `USER` directive when `containerUser`/`remoteUser` are not
+# applied from image metadata, so make the intended user explicit here to avoid
+# dropping into a root shell.
+USER node

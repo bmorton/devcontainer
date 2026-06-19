@@ -31,10 +31,18 @@
   },
   "overrideFeatureInstallOrder": ["ghcr.io/devcontainers/features/rust"],
 
+  // Connect as the `node` user. Set this explicitly rather than relying on the
+  // base image's `remoteUser` metadata: envbuilder (used by Coder) does not honor
+  // image-metadata `remoteUser` and falls back to the image's `USER` (root),
+  // which would otherwise drop Coder workspaces into a root shell.
+  "remoteUser": "node",
+  "containerUser": "node",
+
   // Don't remap the container user's UID/GID to match the host user. The sshd
   // feature creates an `ssh` group at GID 1001, which collides with the host
   // UID/GID (1001) used by CI runners. The CLI's automatic remap then fails with
   // `groupmod: GID '1001' already exists`, breaking `devcontainer up`.
+  // (envbuilder ignores this key; it only affects the devcontainer CLI.)
   "updateRemoteUserUID": false,
 
   // Features to add to the dev container. More info: https://containers.dev/features.
@@ -44,7 +52,9 @@
   // "forwardPorts": [],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "kubectl version --client 2>/dev/null || true",
+  // The sentinel file lets CI verify that the lifecycle actually ran to
+  // completion (both the devcontainer CLI and envbuilder honor this hook).
+  "postCreateCommand": "kubectl version --client 2>/dev/null || true; touch \"$HOME/.devcontainer-postcreate-done\"",
 
   // Configure tool-specific properties.
   "customizations": {
