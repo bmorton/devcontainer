@@ -39,8 +39,26 @@ jobs:
       run: |
         npm install -g @devcontainers/cli
 
-    - name: Build devcontainer
+    # `devcontainer build` only builds the image (Dockerfile + features); it does
+    # NOT create the container or run lifecycle commands such as postCreateCommand.
+    # Use `devcontainer up` so the container is actually started and the lifecycle
+    # commands run, which catches startup failures the plain build step misses.
+    - name: Start devcontainer
       run: |
-        echo "Building devcontainer..."
-        devcontainer build --workspace-folder .
-        echo "Devcontainer build completed successfully"
+        echo "Starting devcontainer (build + create + lifecycle commands)..."
+        devcontainer up --workspace-folder .
+        echo "Devcontainer started successfully"
+
+    - name: Smoke test devcontainer
+      run: |
+        echo "Running smoke test inside the devcontainer..."
+        devcontainer exec --workspace-folder . bash -lc 'echo "Devcontainer is up and exec works"'
+
+    - name: Tear down devcontainer
+      if: always()
+      run: |
+        container_id=$(docker ps -aq --filter "label=devcontainer.local_folder=${GITHUB_WORKSPACE}")
+        if [ -n "$container_id" ]; then
+          echo "Removing devcontainer ($container_id)..."
+          docker rm -f $container_id
+        fi
