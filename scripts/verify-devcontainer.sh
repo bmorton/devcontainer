@@ -46,6 +46,7 @@ if command -v tmux >/dev/null 2>&1; then
 
   session="verify-$$"
   tmux_conf="${HOME}/.tmux.conf"
+  tmux_err="$(mktemp)"
 
   if [ -f "$tmux_conf" ]; then
     pass "tmux config present at $tmux_conf"
@@ -56,7 +57,7 @@ if command -v tmux >/dev/null 2>&1; then
   # Start a detached session, explicitly loading the user's config so a broken
   # config (or a missing HOME) fails the check rather than silently starting a
   # default session.
-  if tmux -f "$tmux_conf" new-session -d -s "$session" 'sleep 5' 2>/tmp/tmux-verify.err; then
+  if tmux -f "$tmux_conf" new-session -d -s "$session" 'sleep 5' 2>"$tmux_err"; then
     if tmux has-session -t "$session" 2>/dev/null; then
       pass "tmux started a session using $tmux_conf"
     else
@@ -64,8 +65,9 @@ if command -v tmux >/dev/null 2>&1; then
     fi
     tmux kill-session -t "$session" 2>/dev/null || true
   else
-    fail "tmux could not start a session: $(cat /tmp/tmux-verify.err 2>/dev/null)"
+    fail "tmux could not start a session: $(cat "$tmux_err" 2>/dev/null)"
   fi
+  rm -f "$tmux_err"
 else
   fail "tmux is not on PATH"
 fi
