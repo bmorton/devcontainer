@@ -4,12 +4,15 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   build-dockerfile:
     name: Build Dockerfile
     runs-on: namespace-profile-devcontainer
     timeout-minutes: 20
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
@@ -23,11 +26,32 @@ jobs:
         docker build -t devcontainer-dockerfile .devcontainer/
         echo "Dockerfile build completed successfully"
 
+  build-envbuilder:
+    name: Build Envbuilder
+    runs-on: namespace-profile-devcontainer
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    # Coder builds workspaces with envbuilder, NOT the devcontainer CLI. The two
+    # diverge on user selection, UID/GID remapping and feature install order, so
+    # the CLI job below can pass while a Coder workspace fails to start. This job
+    # exercises the envbuilder path and runs scripts/verify-devcontainer.sh as the
+    # post-build init script to assert: user is `node` (not root), tmux works, and
+    # the lifecycle (postCreateCommand) ran to completion. A non-zero exit from the
+    # init script fails the job.
+    - name: Build and verify with envbuilder
+      run: |
+        echo "Building dev container with envbuilder (Coder's builder)..."
+        scripts/test-envbuilder.sh
+
   build-devcontainer:
     name: Build Devcontainer
     runs-on: namespace-profile-devcontainer
     timeout-minutes: 30
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
@@ -39,8 +63,26 @@ jobs:
       run: |
         npm install -g @devcontainers/cli
 
-    - name: Build devcontainer
+    # `devcontainer build` only builds the image (Dockerfile + features); it does
+    # NOT create the container or run lifecycle commands such as postCreateCommand.
+    # Use `devcontainer up` so the container is actually started and the lifecycle
+    # commands run, which catches startup failures the plain build step misses.
+    - name: Start devcontainer
       run: |
-        echo "Building devcontainer..."
-        devcontainer build --workspace-folder .
-        echo "Devcontainer build completed successfully"
+        echo "Starting devcontainer (build + create + lifecycle commands)..."
+        devcontainer up --workspace-folder .
+        echo "Devcontainer started successfully"
+
+    - name: Smoke test devcontainer
+      run: |
+        echo "Running smoke test inside the devcontainer..."
+        devcontainer exec --workspace-folder . bash -lc 'echo "Devcontainer is up and exec works"'
+
+    - name: Tear down devcontainer
+      if: always()
+      run: |
+        container_id=$(docker ps -aq --filter "label=devcontainer.local_folder=${GITHUB_WORKSPACE}")
+        if [ -n "$container_id" ]; then
+          echo "Removing devcontainer ($container_id)..."
+          docker rm -f "$container_id"
+        fi
