@@ -57,13 +57,14 @@ docker_args=(
 )
 
 echo "=== Building + pushing devcontainer cache ==="
-echo "DRY_RUN: envbuilder_image=${envbuilder_image}"
-echo "DRY_RUN: cache_repo=${cache_repo}"
-echo "DRY_RUN: push_image=1 exit_on_push_failure=1 cache_ttl_days=${cache_ttl_days}"
-echo "DRY_RUN: init_script=${init_script}"
-echo "DRY_RUN: docker_config_base64=<redacted, ${#ENVBUILDER_DOCKER_CONFIG_BASE64} bytes>"
+echo "config: envbuilder_image=${envbuilder_image}"
+echo "config: cache_repo=${cache_repo}"
+echo "config: push_image=1 exit_on_push_failure=1 cache_ttl_days=${cache_ttl_days}"
+echo "config: init_script=${init_script}"
+echo "config: docker_config_base64=<redacted, ${#ENVBUILDER_DOCKER_CONFIG_BASE64} bytes>"
 
 if [ -n "${DRY_RUN:-}" ]; then
+  echo "DRY_RUN set; not invoking docker."
   exit 0
 fi
 

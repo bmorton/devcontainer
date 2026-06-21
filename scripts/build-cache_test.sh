@@ -37,5 +37,14 @@ else
   echo "PASS: DRY_RUN did not leak credentials"
 fi
 
+# 4. Optional overrides (ENVBUILDER_IMAGE, ENVBUILDER_CACHE_TTL_DAYS) are reflected.
+out=$(CACHE_REPO="ghcr.io/bmorton/devcontainer-cache" \
+      ENVBUILDER_DOCKER_CONFIG_BASE64="ZHVtbXk=" \
+      ENVBUILDER_IMAGE="ghcr.io/coder/envbuilder:9.9.9" \
+      ENVBUILDER_CACHE_TTL_DAYS="7" DRY_RUN=1 bash "$target" 2>&1); rc=$?
+check "override exits 0" test "$rc" -eq 0
+check "ENVBUILDER_IMAGE override reflected" grep -q "envbuilder_image=ghcr.io/coder/envbuilder:9.9.9" <<<"$out"
+check "ENVBUILDER_CACHE_TTL_DAYS override reflected" grep -q "cache_ttl_days=7" <<<"$out"
+
 if [ "$failures" -ne 0 ]; then echo "${failures} check(s) failed." >&2; exit 1; fi
 echo "All build-cache tests passed."
