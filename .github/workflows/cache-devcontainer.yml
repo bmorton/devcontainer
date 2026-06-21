@@ -1,0 +1,44 @@
+name: Cache Devcontainer
+
+# Build the dev container with envbuilder (the builder Coder uses) and push a
+# fully cached image to GHCR, so Coder workspaces start fast by reusing the cache
+# instead of rebuilding from scratch. See scripts/build-cache.sh.
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    # Weekly (Mondays 06:00 UTC) to pick up base-image / feature security updates.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  cache-devcontainer:
+    name: Build and push devcontainer cache
+    runs-on: namespace-profile-devcontainer
+    timeout-minutes: 60
+
+    env:
+      # Pinned envbuilder version: MUST match the version Coder runs, or cached
+      # layer hashes will not match and the cache will be ignored.
+      ENVBUILDER_IMAGE: ghcr.io/coder/envbuilder:1.3.0
+      CACHE_REPO: ghcr.io/bmorton/devcontainer-cache
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Build and push devcontainer cache
+      env:
+        GHCR_USER: ${{ github.actor }}
+        GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # Build a base64-encoded docker config.json for GHCR and hand it to
+        # envbuilder via ENVBUILDER_DOCKER_CONFIG_BASE64. Kept in-step (never
+        # written to $GITHUB_ENV) so the credential is not persisted.
+        auth=$(printf '%s:%s' "$GHCR_USER" "$GHCR_TOKEN" | base64 -w0)
+        export ENVBUILDER_DOCKER_CONFIG_BASE64=$(printf '{"auths":{"ghcr.io":{"auth":"%s"}}}' "$auth" | base64 -w0)
+        scripts/build-cache.sh
