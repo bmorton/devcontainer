@@ -61,3 +61,41 @@ To wire everything up inside the container:
 3. Confirm the GitHub MCP server is available from within `copilot` with the `/mcp`
    slash command, then ask Copilot to interact with your repositories, issues, and
    pull requests.
+
+## Faster Coder startup: prebuilt image cache on GHCR
+
+Coder builds this dev container with [envbuilder](https://github.com/coder/envbuilder),
+which otherwise rebuilds the whole image (Dockerfile **and** every feature —
+Go, Ruby, Rust, kubectl/helm/minikube, Azure CLI, Playwright, …) on every
+workspace start.
+
+The [`Cache Devcontainer`](.github/workflows/cache-devcontainer.yml) workflow
+runs the same envbuilder and pushes a fully cached image to
+`ghcr.io/bmorton/devcontainer-cache` on every push to `main`, weekly, and on
+manual dispatch. Coder then reuses the cache instead of rebuilding.
+
+### One-time setup
+
+After the first successful run, make the GHCR package **public** so Coder can
+pull it without credentials: GitHub → Packages → `devcontainer-cache` → Package
+settings → Change visibility → Public.
+
+### Coder workspace configuration
+
+Configure the workspace template's envbuilder with **the same pinned envbuilder
+version** as CI (`ghcr.io/coder/envbuilder:1.3.0`) and:
+
+| Environment variable | Value |
+| --- | --- |
+| `ENVBUILDER_CACHE_REPO` | `ghcr.io/bmorton/devcontainer-cache` |
+| `ENVBUILDER_GET_CACHED_IMAGE` | `true` (optional) — boot directly from the prebuilt image, the fastest path |
+
+The cache repo is public, so no pull credentials are needed.
+
+### Why the version must match
+
+Cache hits require identical build inputs and tooling between CI and Coder:
+the **same envbuilder version**, the **same architecture** (amd64), and the
+**same repo content** (Dockerfile, `devcontainer.json`, feature versions).
+When you bump the envbuilder version, update it in both
+`.github/workflows/cache-devcontainer.yml` and the Coder template.
