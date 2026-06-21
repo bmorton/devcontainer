@@ -51,7 +51,7 @@ docker_args=(
   -e "ENVBUILDER_PUSH_IMAGE=1"
   -e "ENVBUILDER_EXIT_ON_PUSH_FAILURE=1"
   -e "ENVBUILDER_CACHE_TTL_DAYS=${cache_ttl_days}"
-  -e "ENVBUILDER_DOCKER_CONFIG_BASE64=${ENVBUILDER_DOCKER_CONFIG_BASE64}"
+  -e ENVBUILDER_DOCKER_CONFIG_BASE64
   -v "${repo_root}:${workspace_folder}"
   "${envbuilder_image}"
 )
