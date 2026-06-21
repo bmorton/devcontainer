@@ -82,13 +82,40 @@ settings → Change visibility → Public.
 
 ### Coder workspace configuration
 
-Configure the workspace template's envbuilder with **the same pinned envbuilder
-version** as CI (`ghcr.io/coder/envbuilder:1.3.0`) and:
+There are two ways to consume the cache, both using **the same pinned envbuilder
+version** as CI (`ghcr.io/coder/envbuilder:1.3.0`):
+
+**1. Reuse cached layers (simplest).** Set this on the workspace's envbuilder:
 
 | Environment variable | Value |
 | --- | --- |
 | `ENVBUILDER_CACHE_REPO` | `ghcr.io/bmorton/devcontainer-cache` |
-| `ENVBUILDER_GET_CACHED_IMAGE` | `true` (optional) — boot directly from the prebuilt image, the fastest path |
+
+envbuilder finds each prebuilt layer already in the registry and pulls it instead
+of rebuilding from scratch.
+
+**2. Boot directly from the prebuilt image (fastest).** In the Coder template, use
+the [`envbuilder_cached_image`](https://registry.terraform.io/providers/coder/envbuilder/latest/docs)
+resource from the `coder/envbuilder` provider, pointed at the same cache repo, and
+run the workspace container from its resolved image:
+
+```hcl
+resource "envbuilder_cached_image" "cached" {
+  count         = data.coder_workspace.me.start_count
+  builder_image = "ghcr.io/coder/envbuilder:1.3.0"
+  git_url       = local.repo_url
+  cache_repo    = "ghcr.io/bmorton/devcontainer-cache"
+}
+
+# Then run the workspace container from envbuilder_cached_image.cached[0].image
+# (with envbuilder_cached_image.cached[0].env), falling back to a normal
+# envbuilder build when the cache is empty.
+```
+
+Under the hood this resource probes the cache with envbuilder's
+`ENVBUILDER_GET_CACHED_IMAGE` dry-run and, on a hit, lets the workspace start from
+the prebuilt image without building. On a cache miss it falls back to a normal
+build.
 
 The cache repo is public, so no pull credentials are needed.
 
