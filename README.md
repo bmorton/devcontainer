@@ -6,18 +6,27 @@ My personal devcontainer for VSCode.
 
 - `mcr.microsoft.com/devcontainers/typescript-node:24-bookworm`
 
-## Devcontainer features
+## Toolchain
 
-- Go
-- Ruby (via asdf)
-- Rust
-- sshd
+The toolchain is installed directly in [`.devcontainer/Dockerfile`](.devcontainer/Dockerfile)
+rather than via devcontainer `features:`. Coder's envbuilder prebuilt-image cache
+probe cannot reproduce feature layers (features install from
+`/.envbuilder/features/...` during the build but `/tmp/...` during the probe), so a
+feature-based devcontainer never gets a cache hit and rebuilds on every start. A
+pure-Dockerfile build is reproducible by the probe, so a cached workspace can boot
+directly from the prebuilt image. See
+[coder/terraform-provider-envbuilder#68](https://github.com/coder/terraform-provider-envbuilder/issues/68).
+
+- Go (`1.26.3`)
+- Ruby (`4.0.5`, built with ruby-build)
+- Rust (stable, via rustup)
+- sshd (port 2222)
 - kubectl / helm / minikube
 - GitHub CLI (`gh`)
 - Azure CLI (`az`, latest)
-- GitHub Copilot CLI
-- Anthropic Claude Code
-- opencode
+- GitHub Copilot CLI (`@github/copilot`)
+- Anthropic Claude Code (`@anthropic-ai/claude-code`)
+- opencode (`opencode-ai`)
 - `@openprose/prose-cli` (npm)
 - Namespace CLI (`nsc`)
 - Playwright with the Chromium browser (and required OS dependencies)

@@ -5,31 +5,14 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "features": {
-    "ghcr.io/devcontainers-extra/features/apt-packages:1": {
-      "packages": "build-essential,git,postgresql-client,curl,htop,tmux,vim"
-    },
-    "ghcr.io/devcontainers/features/go:1": {
-      "version": "1.26.3"
-    },
-    "ghcr.io/devcontainers-extra/features/ruby-asdf:0": {
-      "version": "4.0.5"
-    },
-    "ghcr.io/devcontainers/features/rust:1": {},
-    "ghcr.io/devcontainers/features/sshd:1": {},
-    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/azure-cli:1": {
-      "version": "latest"
-    },
-    "ghcr.io/devcontainers/features/copilot-cli:1": {},
-    "ghcr.io/devcontainers-extra/features/claude-code:2": {},
-    "ghcr.io/devcontainers-extra/features/opencode:1": {},
-    "ghcr.io/devcontainers-extra/features/npm-package:1": {
-      "package": "@openprose/prose-cli"
-    }
-  },
-  "overrideFeatureInstallOrder": ["ghcr.io/devcontainers/features/rust"],
+
+  // This devcontainer intentionally installs its whole toolchain in the
+  // Dockerfile instead of using devcontainer `features:`. Coder's envbuilder
+  // prebuilt-image cache probe cannot reproduce feature layers (they install
+  // from /.envbuilder/features/... during the build but /tmp/... during the
+  // probe), so a feature-based devcontainer never gets a cache hit and always
+  // rebuilds. A pure-Dockerfile build is reproducible by the probe, enabling a
+  // direct boot from the cached image. See coder/terraform-provider-envbuilder#68.
 
   // Connect as the `node` user. Set this explicitly rather than relying on the
   // base image's `remoteUser` metadata: envbuilder (used by Coder) does not honor
@@ -38,15 +21,15 @@
   "remoteUser": "node",
   "containerUser": "node",
 
-  // Don't remap the container user's UID/GID to match the host user. The sshd
-  // feature creates an `ssh` group at GID 1001, which collides with the host
-  // UID/GID (1001) used by CI runners. The CLI's automatic remap then fails with
-  // `groupmod: GID '1001' already exists`, breaking `devcontainer up`.
-  // (envbuilder ignores this key; it only affects the devcontainer CLI.)
+  // Don't remap the container user's UID/GID to match the host user. The
+  // openssh-server package creates an `ssh` group at GID 1001, which collides
+  // with the host UID/GID (1001) used by CI runners. The CLI's automatic remap
+  // then fails with `groupmod: GID '1001' already exists`, breaking
+  // `devcontainer up`. (envbuilder ignores this key; it only affects the CLI.)
   "updateRemoteUserUID": false,
 
-  // Features to add to the dev container. More info: https://containers.dev/features.
-  // "features": {},
+  // Tooling is installed in the Dockerfile (see .devcontainer/Dockerfile), not
+  // via devcontainer features.
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [],
