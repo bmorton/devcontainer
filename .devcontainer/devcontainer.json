@@ -23,7 +23,7 @@
       "version": "latest"
     },
     "ghcr.io/devcontainers/features/copilot-cli:1": {},
-    "ghcr.io/devcontainers-extra/features/claude-code:2": {},
+    "ghcr.io/devcontainers-extra/features/claude-code:": {},
     "ghcr.io/devcontainers-extra/features/opencode:1": {},
     "ghcr.io/devcontainers-extra/features/npm-package:1": {
       "package": "@openprose/prose-cli"
