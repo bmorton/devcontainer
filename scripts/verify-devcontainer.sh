@@ -11,6 +11,7 @@
 #   1. the effective user is `node`, not root,
 #   2. tmux is on PATH and can start a session that reads ~/.tmux.conf,
 #   3. the lifecycle ran to completion (postCreateCommand sentinel exists).
+#   4. pi and its global resources are installed for the active user.
 #
 # Any failed check exits non-zero so CI fails loudly instead of silently
 # dropping you into a broken shell.
@@ -78,6 +79,31 @@ if [ -f "$sentinel" ]; then
   pass "lifecycle sentinel present ($sentinel)"
 else
   fail "lifecycle sentinel missing ($sentinel); postCreateCommand did not complete"
+fi
+
+# 4. pi and the global workflow must be available without logging in.
+if command -v pi >/dev/null 2>&1 && pi --version; then
+  pass "pi is on PATH and runs"
+else
+  fail "pi is missing or cannot run"
+fi
+
+agent_dir="${HOME}/.pi/agent"
+for resource in AGENTS.md .i-have-adhd-always \
+  skills/spec-first/SKILL.md skills/plan-slices/SKILL.md \
+  skills/verify-done/SKILL.md skills/debug-loop/SKILL.md \
+  prompts/spec.md prompts/plan.md prompts/slice.md; do
+  if [ -f "${agent_dir}/${resource}" ]; then
+    pass "pi resource present: $resource"
+  else
+    fail "pi resource missing: ${agent_dir}/${resource}"
+  fi
+done
+
+if pi list 2>&1 | grep -Fq 'git:github.com/ayghri/i-have-adhd@'; then
+  pass "i-have-adhd is registered globally"
+else
+  fail "i-have-adhd is not registered globally"
 fi
 
 echo "=== Verification complete ==="

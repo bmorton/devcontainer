@@ -21,6 +21,7 @@ My personal devcontainer for VSCode.
 - `@openprose/prose-cli` (npm)
 - Namespace CLI (`nsc`)
 - Playwright with the Chromium browser (and required OS dependencies)
+- pi coding agent with i-have-adhd and a lean global workflow
 
 ## APT packages
 
@@ -61,6 +62,68 @@ To wire everything up inside the container:
 3. Confirm the GitHub MCP server is available from within `copilot` with the `/mcp`
    slash command, then ask Copilot to interact with your repositories, issues, and
    pull requests.
+
+## pi coding agent
+
+The image installs `@earendil-works/pi-coding-agent@1.1.0` globally using
+`npm install --ignore-scripts`. Both `node` and `root` get their own
+`~/.pi/agent/` with:
+
+- Short personal preferences from [AGENTS.md](.devcontainer/pi/AGENTS.md).
+- The native [i-have-adhd](https://github.com/ayghri/i-have-adhd) package,
+  pinned to commit `723af7d9afaf43eb871dbcce6129e2bf80de90d5`, and its always-on marker.
+- Four editable skills: spec-first, plan-slices, verify-done, and debug-loop.
+- Three prompt templates: `/spec <feature>`, `/plan <spec section>`, and
+  `/slice <plan filename or number> <slice number>`.
+
+These are global resources, so they work in any repository without copying a
+skeleton. No superpowers package is installed. The skills create project specs
+and plans only when requested; they do not impose the approvals project's stack.
+Verification uses `mise run check` only when the project defines it, otherwise
+the project's documented checks.
+
+### First use
+
+1. Rebuild the container, then launch `pi` as your normal workspace user.
+2. Run `/login` and choose GitHub Copilot if using your Copilot subscription.
+3. Use `/model`, then Ctrl+S to save your default model.
+4. Start with `/spec <feature>`, review the spec, then `/plan <section>` and
+   implement approved slices with `/slice <plan> <n>`.
+
+Authentication and model choices are deliberately not baked into the image.
+Persist your user's `~/.pi` using your workspace platform's home persistence or a
+private volume if they should survive container replacement. A volume mounted
+over this directory hides the image defaults, so seed an empty volume from the
+image first. Do not commit authentication files or share this volume between users.
+Node and root have separate configuration and login state.
+
+Use `/i-have-adhd off` or `/i-have-adhd on` per session. Remove
+`~/.pi/agent/.i-have-adhd-always` to disable the default for new sessions.
+Edit the bundled resources under `.devcontainer/pi/` and rebuild to change image
+defaults, or edit your own `~/.pi/agent/` and use `/reload` for session resources.
+Changes to image defaults do not update an existing persistent volume.
+
+### Optional project-local pi-squad
+
+Install squad only in the target project, not globally in this image:
+
+```bash
+cd /path/to/project
+pi install -l npm:pi-squad
+```
+
+Review project-local packages before granting trust with `/trust`, then restart
+pi and use `/squad defaults` and `/squad agents`. Commit `.pi/settings.json`
+and any project role overrides in `.pi/squad/agents/`; add `.pi/npm/` and
+`.pi/git/` to that project's `.gitignore`. Keep stack-specific instructions in
+the project's `AGENTS.md` and squad overrides, not the global preferences.
+
+Use squad for milestones after approving a spec and plan. Start with concurrency
+2, make shared contracts dependency edges, and avoid inheriting the entire
+session unless needed. Inspect the diff and run the project checks yourself
+before recording `squad_review`; use `forkFromTask` for rework. Debugging and
+small changes stay solo. Squad state lives separately in `~/.pi/squad/`, so
+persist that directory too if you need to resume runs.
 
 ## Faster Coder startup: prebuilt image cache on GHCR
 
