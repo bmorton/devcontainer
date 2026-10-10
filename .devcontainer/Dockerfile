@@ -20,6 +20,17 @@ RUN npm install -g playwright \
     && playwright install --with-deps chromium \
     && chmod -R a+rx /ms-playwright
 
+# Install pi and seed personal resources for both supported users.
+ARG PI_VERSION=1.1.0
+ARG I_HAVE_ADHD_REV=723af7d9afaf43eb871dbcce6129e2bf80de90d5
+RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent@${PI_VERSION}
+COPY --chown=node:node pi/ /home/node/.pi/agent/
+COPY pi/ /root/.pi/agent/
+RUN pi install "git:github.com/ayghri/i-have-adhd@${I_HAVE_ADHD_REV}" \
+    && touch /root/.pi/agent/.i-have-adhd-always \
+    && su node -c "pi install git:github.com/ayghri/i-have-adhd@${I_HAVE_ADHD_REV}" \
+    && su node -c "touch /home/node/.pi/agent/.i-have-adhd-always"
+
 # Tell dev container features where the target user's home directory is.
 # The devcontainer CLI passes `_REMOTE_USER_HOME`/`_CONTAINER_USER_HOME` to every
 # feature's install.sh, but envbuilder (used by Coder) only sets `_REMOTE_USER`
