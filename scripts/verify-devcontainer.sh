@@ -92,7 +92,10 @@ agent_dir="${HOME}/.pi/agent"
 for resource in AGENTS.md .i-have-adhd-always \
   skills/spec-first/SKILL.md skills/plan-slices/SKILL.md \
   skills/verify-done/SKILL.md skills/debug-loop/SKILL.md \
-  prompts/spec.md prompts/plan.md prompts/slice.md; do
+  prompts/spec.md prompts/plan.md prompts/slice.md \
+  git/github.com/ayghri/i-have-adhd/extensions/i-have-adhd.ts \
+  git/github.com/ayghri/i-have-adhd/extensions/context-compat.ts \
+  git/github.com/ayghri/i-have-adhd/skills/i-have-adhd/SKILL.md; do
   if [ -f "${agent_dir}/${resource}" ]; then
     pass "pi resource present: $resource"
   else
@@ -100,7 +103,16 @@ for resource in AGENTS.md .i-have-adhd-always \
   fi
 done
 
-if pi list 2>&1 | grep -Fq 'git:github.com/ayghri/i-have-adhd@'; then
+if node -e '
+  const fs = require("node:fs");
+  const settings = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+  const installed = (settings.packages || []).some(pkg => {
+    const source = typeof pkg === "string" ? pkg : pkg?.source;
+    return typeof source === "string" &&
+      source.startsWith("git:github.com/ayghri/i-have-adhd@");
+  });
+  process.exit(installed ? 0 : 1);
+' "${agent_dir}/settings.json"; then
   pass "i-have-adhd is registered globally"
 else
   fail "i-have-adhd is not registered globally"
