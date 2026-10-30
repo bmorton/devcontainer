@@ -92,6 +92,18 @@ COPY mise.toml /etc/mise/config.toml
 RUN mkdir -p "${MISE_DATA_DIR}" "${GOPATH}" "${RUSTUP_HOME}" "${CARGO_HOME}" \
     && chown -R node:node "${MISE_DATA_DIR}" "${GOPATH}" "${RUSTUP_HOME}" "${CARGO_HOME}"
 
+# Login shells do not see the ENV PATH above: Debian's /etc/profile resets PATH
+# and the base image's /etc/profile.d/00-restore-env.sh only restores the PATH
+# that existed when the base image was built. `coder ssh`, VS Code terminals and
+# new tmux windows are all login shells, so without this the tools "vanish"
+# (CI's init script is non-login and never noticed). Export the tool dirs and
+# mise variables from a profile.d snippet and source it from the interactive rc
+# files too, exactly as the devcontainer features used to do.
+COPY 10-devcontainer-tools.sh /etc/profile.d/10-devcontainer-tools.sh
+RUN chmod 0644 /etc/profile.d/10-devcontainer-tools.sh \
+    && printf '\n. /etc/profile.d/10-devcontainer-tools.sh\n' >> /etc/bash.bashrc \
+    && printf '\n. /etc/profile.d/10-devcontainer-tools.sh\n' >> /etc/zsh/zshrc
+
 # Install as `node` so the shared tool tree is owned by the user who will add
 # to it (gems, `go install`, `cargo install`, `mise use`). root can still run
 # and modify everything.
