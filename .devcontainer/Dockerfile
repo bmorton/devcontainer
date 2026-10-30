@@ -1,42 +1,108 @@
-FROM mcr.microsoft.com/devcontainers/typescript-node:24-bookworm
+# syntax=docker/dockerfile:1
+#
+# Dockerfile-only devcontainer: no devcontainer `features:`.
+#
+# Coder builds this workspace with envbuilder, and envbuilder's prebuilt-image
+# cache probe (the `envbuilder_cached_image` Terraform resource) cannot reproduce
+# devcontainer *feature* layers, so a feature-based image always misses the cache
+# and rebuilds on every workspace start (coder/terraform-provider-envbuilder#68).
+# Everything is therefore installed from plain RUN layers here. Tool versions
+# live in mise.toml (installed system-wide with mise); only the few things mise
+# cannot manage (apt packages, nsc, Playwright) are installed directly.
+FROM mcr.microsoft.com/devcontainers/typescript-node:26-trixie
 
-# Wire up the tmux configuration for the default container user (node)
+USER root
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+ARG DEBIAN_FRONTEND=noninteractive
+
+# ---------------------------------------------------------------------------
+# APT packages: general toolbox, sshd, and the headers native Ruby gems and
+# ruby-build need (libyaml/openssl/readline/ffi/gdbm/zlib).
+# tmux is intentionally NOT installed from apt; a current release comes from mise.
+# ---------------------------------------------------------------------------
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential git postgresql-client curl htop vim \
+        ca-certificates unzip \
+        openssh-server \
+        autoconf bison libssl-dev libyaml-dev libreadline-dev zlib1g-dev \
+        libncurses-dev libffi-dev libgdbm-dev libdb-dev uuid-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---------------------------------------------------------------------------
+# sshd (replaces ghcr.io/devcontainers/features/sshd). Listens on 2222 and is
+# started by postStartCommand in devcontainer.json.
+# ---------------------------------------------------------------------------
+RUN mkdir -p /var/run/sshd \
+    && ssh-keygen -A \
+    && sed -i 's/^#\?Port .*/Port 2222/' /etc/ssh/sshd_config \
+    && sed -i 's/^#\?PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# ---------------------------------------------------------------------------
+# /workspaces is created root-owned by the base image and envbuilder does not
+# chown it, so `git clone` into it failed for the node user. Hand it over.
+# ---------------------------------------------------------------------------
+RUN mkdir -p /workspaces && chown node:node /workspaces
+
+# ---------------------------------------------------------------------------
+# tmux configuration for both `node` (default) and `root` (used by `coder ssh`).
+# ---------------------------------------------------------------------------
 COPY tmux.conf /home/node/.tmux.conf
-RUN chown node:node /home/node/.tmux.conf
-
-# Also wire up tmux configuration for root (used when connecting via `coder ssh`)
 COPY tmux.conf /root/.tmux.conf
-RUN chown root:root /root/.tmux.conf
+RUN chown node:node /home/node/.tmux.conf && chown root:root /root/.tmux.conf
 
-# Install the Namespace (nsc) CLI - https://namespace.so/docs/reference/cli/installation
-# Install system-wide so it is on PATH for both the `node` and `root` users.
+# ---------------------------------------------------------------------------
+# Namespace (nsc) CLI - https://namespace.so/docs/reference/cli/installation
+# Installed system-wide so it is on PATH for both `node` and `root`.
+# ---------------------------------------------------------------------------
 RUN curl -fsSL https://get.namespace.so/cloud/install.sh | NS_INSTALL_DIR=/usr/local/bin sh
 
-# Install Playwright with the Chromium browser and its required OS dependencies.
-# Browsers are stored in a shared, system-wide location (PLAYWRIGHT_BROWSERS_PATH)
-# so both the `node` and `root` users can run Playwright without re-downloading.
+# ---------------------------------------------------------------------------
+# Playwright with Chromium and its OS dependencies. Browsers live in a shared,
+# system-wide location so both users can run Playwright without re-downloading.
+# ---------------------------------------------------------------------------
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN npm install -g playwright \
     && playwright install --with-deps chromium \
-    && chmod -R a+rx /ms-playwright
+    && chmod -R a+rx /ms-playwright \
+    && rm -rf /var/lib/apt/lists/*
 
-# Tell dev container features where the target user's home directory is.
-# The devcontainer CLI passes `_REMOTE_USER_HOME`/`_CONTAINER_USER_HOME` to every
-# feature's install.sh, but envbuilder (used by Coder) only sets `_REMOTE_USER`
-# and `_CONTAINER_USER` -- it leaves the *_HOME variables empty. Features that
-# rely on them then break: e.g. the claude-code feature runs
-# `cp "$_REMOTE_USER_HOME/.local/bin/claude" /usr/local/bin/claude`, which under
-# envbuilder expands to `cp /.local/bin/claude ...` and fails the whole build.
-# Supplying the values here (as build ARGs, so they don't leak into the running
-# container's environment) keeps feature installs working on the envbuilder path.
-# ARGs declared here remain in scope for the feature install steps envbuilder
-# appends after this Dockerfile, but reset for the devcontainer CLI (which sets
-# these variables itself), so this is a no-op there.
-ARG _REMOTE_USER_HOME=/home/node
-ARG _CONTAINER_USER_HOME=/home/node
+# ---------------------------------------------------------------------------
+# mise (https://mise.jdx.dev) manages every versioned tool: languages, k8s
+# CLIs, gh/az, coding agents, tmux. Pinned binary copied from the official
+# image; versions pinned in mise.toml (-> /etc/mise/config.toml).
+#
+# Layout:
+#   - MISE_DATA_DIR=/usr/local/share/mise : installs + shims, shared by all
+#     users and outside $HOME so a mounted/persisted home cannot shadow it.
+#   - shims dir on PATH via ENV, so tools work in non-interactive shells
+#     (VS Code server, Coder agent, CI `devcontainer exec`) without `mise
+#     activate`. Interactive shells may still `eval "$(mise activate bash)"`.
+#   - GOPATH / CARGO_HOME / RUSTUP_HOME are system-wide and node-owned so
+#     `go install` / `cargo install` work and persist in the image.
+# ---------------------------------------------------------------------------
+COPY --from=ghcr.io/jdx/mise:2026.10.23 /usr/local/bin/mise /usr/local/bin/mise
+ENV MISE_DATA_DIR=/usr/local/share/mise \
+    MISE_TRUSTED_CONFIG_PATHS=/etc/mise \
+    GOPATH=/go \
+    RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo
+ENV PATH=${MISE_DATA_DIR}/shims:${GOPATH}/bin:${CARGO_HOME}/bin:${PATH}
+COPY mise.toml /etc/mise/config.toml
+RUN mkdir -p "${MISE_DATA_DIR}" "${GOPATH}" "${RUSTUP_HOME}" "${CARGO_HOME}" \
+    && chown -R node:node "${MISE_DATA_DIR}" "${GOPATH}" "${RUSTUP_HOME}" "${CARGO_HOME}"
 
-# Default to the non-root `node` user. envbuilder (used by Coder) picks its target
+# Install as `node` so the shared tool tree is owned by the user who will add
+# to it (gems, `go install`, `cargo install`, `mise use`). root can still run
+# and modify everything.
+USER node
+RUN MISE_YES=1 mise install --jobs 8 \
+    && mise reshim \
+    && mise ls --missing | tee /dev/stderr | { ! grep -q .; } \
+    && rm -rf /home/node/.cache/mise
+
+# Stay on the non-root `node` user. envbuilder (used by Coder) picks its target
 # user from the last `USER` directive when `containerUser`/`remoteUser` are not
-# applied from image metadata, so make the intended user explicit here to avoid
-# dropping into a root shell.
+# applied from image metadata, so the intended user must be explicit here to
+# avoid dropping into a root shell.
 USER node

@@ -1,35 +1,14 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
+// For format details, see https://aka.ms/devcontainer.json.
+//
+// This devcontainer deliberately uses NO `features:`. Everything is installed by
+// the Dockerfile (tool versions in mise.toml) so that Coder's envbuilder cache
+// probe can reproduce the build and boot workspaces straight from the prebuilt
+// image. See the Dockerfile header and README for details.
 {
   "name": "bmorton/devcontainer",
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "features": {
-    "ghcr.io/devcontainers-extra/features/apt-packages:1": {
-      "packages": "build-essential,git,postgresql-client,curl,htop,tmux,vim"
-    },
-    "ghcr.io/devcontainers/features/go:1": {
-      "version": "1.26.3"
-    },
-    "ghcr.io/devcontainers-extra/features/ruby-asdf:0": {
-      "version": "4.0.5"
-    },
-    "ghcr.io/devcontainers/features/rust:1": {},
-    "ghcr.io/devcontainers/features/sshd:1": {},
-    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/azure-cli:1": {
-      "version": "latest"
-    },
-    "ghcr.io/devcontainers/features/copilot-cli:1": {},
-    "ghcr.io/devcontainers-extra/features/claude-code:2": {},
-    "ghcr.io/devcontainers-extra/features/opencode:1": {},
-    "ghcr.io/devcontainers-extra/features/npm-package:1": {
-      "package": "@openprose/prose-cli"
-    }
-  },
-  "overrideFeatureInstallOrder": ["ghcr.io/devcontainers/features/rust"],
 
   // Connect as the `node` user. Set this explicitly rather than relying on the
   // base image's `remoteUser` metadata: envbuilder (used by Coder) does not honor
@@ -38,15 +17,11 @@
   "remoteUser": "node",
   "containerUser": "node",
 
-  // Don't remap the container user's UID/GID to match the host user. The sshd
-  // feature creates an `ssh` group at GID 1001, which collides with the host
-  // UID/GID (1001) used by CI runners. The CLI's automatic remap then fails with
+  // Don't remap the container user's UID/GID to match the host user. CI runners
+  // use UID/GID 1001 and the automatic remap has previously failed with
   // `groupmod: GID '1001' already exists`, breaking `devcontainer up`.
   // (envbuilder ignores this key; it only affects the devcontainer CLI.)
   "updateRemoteUserUID": false,
-
-  // Features to add to the dev container. More info: https://containers.dev/features.
-  // "features": {},
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [],
@@ -55,6 +30,10 @@
   // The sentinel file lets CI verify that the lifecycle actually ran to
   // completion (both the devcontainer CLI and envbuilder honor this hook).
   "postCreateCommand": "kubectl version --client 2>/dev/null || true; touch \"$HOME/.devcontainer-postcreate-done\"",
+
+  // Start sshd (port 2222) on every container start; this replaces the entrypoint
+  // the sshd devcontainer feature used to install. Never fails the start.
+  "postStartCommand": "sudo /usr/sbin/sshd 2>/dev/null || true",
 
   // Configure tool-specific properties.
   "customizations": {
@@ -111,8 +90,5 @@
         "files.insertFinalNewline": true
       }
     }
-  },
-
-  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  // "remoteUser": "root"
+  }
 }

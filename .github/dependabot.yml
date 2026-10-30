@@ -1,13 +1,8 @@
 version: 2
 updates:
-  # Devcontainer feature references in .devcontainer/devcontainer.json
-  - package-ecosystem: "devcontainers"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-
-  # Base image (FROM) in .devcontainer/Dockerfile
+  # Base image (FROM) in .devcontainer/Dockerfile. Tool versions are NOT here:
+  # they live in .devcontainer/mise.toml, which Dependabot does not understand;
+  # the "Bump mise tools" workflow handles those.
   - package-ecosystem: "docker"
     directory: "/.devcontainer"
     schedule:

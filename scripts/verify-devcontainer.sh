@@ -10,7 +10,9 @@
 # It asserts the things that have previously broken on Coder/envbuilder:
 #   1. the effective user is `node`, not root,
 #   2. tmux is on PATH and can start a session that reads ~/.tmux.conf,
-#   3. the lifecycle ran to completion (postCreateCommand sentinel exists).
+#   3. the lifecycle ran to completion (postCreateCommand sentinel exists),
+#   4. /workspaces is writable by the user (git clone used to fail there),
+#   5. every tool pinned in mise.toml is installed and resolvable via shims.
 #
 # Any failed check exits non-zero so CI fails loudly instead of silently
 # dropping you into a broken shell.
@@ -78,6 +80,43 @@ if [ -f "$sentinel" ]; then
   pass "lifecycle sentinel present ($sentinel)"
 else
   fail "lifecycle sentinel missing ($sentinel); postCreateCommand did not complete"
+fi
+
+# 4. /workspaces must be writable by the current user (envbuilder leaves the
+#    base image's root-owned directory alone; the Dockerfile chowns it).
+probe="/workspaces/.verify-write-$$"
+if mkdir "$probe" 2>/dev/null; then
+  rmdir "$probe"
+  pass "/workspaces is writable by $(id -un)"
+else
+  fail "/workspaces is not writable by $(id -un) (owner: $(stat -c '%U:%G' /workspaces 2>/dev/null || echo unknown))"
+fi
+
+# 5. mise-managed tools: nothing pinned in /etc/mise/config.toml may be missing,
+#    and a representative set of shims must execute from a plain PATH lookup
+#    (no `mise activate`), which is how VS Code / Coder / CI shells see them.
+if command -v mise >/dev/null 2>&1; then
+  pass "mise is on PATH ($(mise --version 2>/dev/null | head -1))"
+  missing="$(mise ls --missing 2>/dev/null || true)"
+  if [ -z "$missing" ]; then
+    pass "all mise tools from the system config are installed"
+  else
+    fail "mise reports missing tools:"$'\n'"$missing"
+  fi
+  for tool in go ruby cargo kubectl helm gh az claude opencode copilot pi tmux gopls golangci-lint; do
+    if command -v "$tool" >/dev/null 2>&1 && "$tool" --version >/dev/null 2>&1; then
+      pass "$tool runs via shim ($(command -v "$tool"))"
+    else
+      fail "$tool is missing or fails to run"
+    fi
+  done
+  if [ -x /usr/local/bin/nsc ]; then
+    pass "nsc installed"
+  else
+    fail "nsc missing from /usr/local/bin"
+  fi
+else
+  fail "mise is not on PATH"
 fi
 
 echo "=== Verification complete ==="
