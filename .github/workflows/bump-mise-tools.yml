@@ -1,0 +1,59 @@
+name: Bump mise tools
+
+# Dependabot cannot read .devcontainer/mise.toml, so this does the equivalent:
+# weekly, resolve the newest version of every pinned tool, rewrite the pins and
+# open (or update) a single PR. The normal "Build Containers" checks then prove
+# the new versions build and start before anything is merged.
+on:
+  schedule:
+    # Mondays 05:00 UTC, an hour before the weekly cache rebuild.
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    name: Bump pinned tool versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Install mise
+      uses: jdx/mise-action@v5
+      with:
+        install: false
+        cache: false
+
+    # `mise upgrade --bump` rewrites each pin in mise.toml to the latest
+    # available version. Run from .devcontainer so that file is the config in
+    # scope; MISE_YES skips prompts. Tools are not actually installed here
+    # (that is what the build workflow is for).
+    - name: Bump pins in .devcontainer/mise.toml
+      working-directory: .devcontainer
+      env:
+        MISE_YES: "1"
+        MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}/.devcontainer
+      run: |
+        mise upgrade --bump --dry-run
+        mise upgrade --bump
+        git diff --stat -- mise.toml
+
+    - name: Open pull request
+      uses: peter-evans/create-pull-request@v8
+      with:
+        branch: automation/bump-mise-tools
+        commit-message: "Bump mise tool versions"
+        title: "Bump mise tool versions"
+        body: |
+          Weekly automated bump of the tool pins in `.devcontainer/mise.toml`
+          (`mise upgrade --bump`). Review the diff, let **Build Containers**
+          validate the image, then merge; the cache workflow republishes the
+          prebuilt image on merge.
+        labels: dependencies
+        delete-branch: true

@@ -1,45 +1,94 @@
 # devcontainer
 
-My personal devcontainer for VSCode.
+My personal devcontainer for VS Code and Coder.
 
-## Base image
+## How it is put together
 
-- `mcr.microsoft.com/devcontainers/typescript-node:24-bookworm`
+- **Base image:** `mcr.microsoft.com/devcontainers/typescript-node:26-trixie`
+  (Node 26 LTS on Debian 13).
+- **No devcontainer features.** Everything is installed by
+  [`.devcontainer/Dockerfile`](.devcontainer/Dockerfile). Coder's envbuilder
+  prebuilt-image cache probe cannot reproduce feature layers
+  ([coder/terraform-provider-envbuilder#68](https://github.com/coder/terraform-provider-envbuilder/issues/68)),
+  so a feature-based image always rebuilds on workspace start; a pure Dockerfile
+  lets workspaces boot straight from the cached image.
+- **Tool versions live in [`.devcontainer/mise.toml`](.devcontainer/mise.toml)**
+  and are installed system-wide by [mise](https://mise.jdx.dev) during the image
+  build. Every version is pinned; the weekly
+  [`Bump mise tools`](.github/workflows/bump-mise-tools.yml) workflow opens a PR
+  with newer pins. Dependabot covers the base image and GitHub Actions.
 
-## Devcontainer features
+### Tools managed by mise
 
-- Go
-- Ruby (via asdf)
-- Rust
-- sshd
-- kubectl / helm / minikube
-- GitHub CLI (`gh`)
-- Azure CLI (`az`, latest)
-- GitHub Copilot CLI
-- Anthropic Claude Code
-- opencode
-- `@openprose/prose-cli` (npm)
-- Namespace CLI (`nsc`)
-- Playwright with the Chromium browser (and required OS dependencies)
+| Area | Tools |
+| --- | --- |
+| Languages | Go, Ruby, Rust (rustup), uv |
+| Go tooling | golangci-lint, staticcheck, gopls, dlv (delve), govulncheck |
+| Kubernetes | kubectl, helm, minikube |
+| Cloud / platform | GitHub CLI (`gh`), Azure CLI (`az`) |
+| Coding agents | Claude Code (`claude`), GitHub Copilot CLI (`copilot`), opencode, pi |
+| Utilities | witr |
+| Terminal | tmux (official static build, newer than Debian's package) |
 
-## APT packages
+The exact versions are in `mise.toml`. Tools are reached through mise shims
+(`/usr/local/share/mise/shims`, already on `PATH` for every shell, including
+non-interactive ones used by VS Code, Coder and CI), so nothing needs
+`mise activate`. Project checkouts can carry their own `mise.toml` to override
+a version for that project; `mise use` / `mise install` work as usual.
 
-- build-essential
-- git
-- postgresql-client
-- curl
-- htop
-- tmux
-- vim
+### Installed directly by the Dockerfile
 
-## VSCode extensions
+- APT: build-essential, git, postgresql-client, curl, htop, vim, openssh-server,
+  and the headers native Ruby gems need.
+- sshd on port 2222, started by `postStartCommand`.
+- Namespace CLI (`nsc`).
+- Playwright with Chromium and its OS dependencies (`PLAYWRIGHT_BROWSERS_PATH=/ms-playwright`).
+- `/workspaces` is owned by `node` so `git clone` works there on Coder.
+- tmux configuration for `node` and `root`.
+
+### Shared tool homes
+
+`GOPATH=/go`, `CARGO_HOME=/usr/local/cargo` and `RUSTUP_HOME=/usr/local/rustup`
+are system-wide and owned by `node`, so `go install` and `cargo install` work
+without sudo and survive a persisted home directory.
+
+## VS Code extensions
 
 - eamodio.gitlens
-- sourcegraph.cody-ai
+- github.vscode-pull-request-github
+- github.vscode-github-actions
+- redhat.vscode-yaml
 - shopify.ruby-lsp
 - aki77.rails-db-schema
 - golang.go
 - ms-kubernetes-tools.vscode-kubernetes-tools
+
+## tmux, iTerm2 and Claude Code
+
+[`.devcontainer/tmux.conf`](.devcontainer/tmux.conf) keeps the `C-a` prefix and
+custom key bindings, and is configured so terminal-aware tools behave inside
+tmux the way they do outside it:
+
+| Setting | Why |
+| --- | --- |
+| `default-terminal tmux-256color`, `terminal-features xterm*:RGB,...` | True color and modern terminfo inside panes. |
+| `allow-passthrough all` | Claude Code's desktop notifications, tab progress bar and inline images reach iTerm2/Kitty/Ghostty, even from a window that is not visible. |
+| `focus-events on` | Applications learn when their pane gains/loses focus. |
+| `extended-keys on` + `extkeys` feature | Shift+Enter inserts a newline in Claude Code instead of submitting. |
+| `set-clipboard on` | OSC 52 copies (Claude Code `/copy`) land on the local clipboard. |
+| `escape-time 10` | Esc is instant in Claude Code and vim. |
+
+On the iTerm2 side, once: Settings → Profiles → Terminal → enable
+"Notification Center Alerts" and, under "Filter Alerts", "Send escape
+sequence-generated alerts"; Settings → General → Selection → "Applications in
+terminal may access clipboard" (running `/terminal-setup` in Claude Code does
+this one for you, even from inside tmux). Restart Claude Code after changing
+tmux settings; it only inspects `$TMUX` at startup.
+
+iTerm2's **Session Status** indicator for Claude Code (OSC 7501) is not relayed
+by a normal `tmux attach`. To get it inside tmux, attach with iTerm2's tmux
+integration instead: `tmux -CC attach` (iTerm2 3.7.5+ shows Claude Code sessions
+running in tmux-integration panes).
 
 ## GitHub MCP server with the Copilot CLI
 
@@ -65,14 +114,14 @@ To wire everything up inside the container:
 ## Faster Coder startup: prebuilt image cache on GHCR
 
 Coder builds this dev container with [envbuilder](https://github.com/coder/envbuilder),
-which otherwise rebuilds the whole image (Dockerfile **and** every feature —
-Go, Ruby, Rust, kubectl/helm/minikube, Azure CLI, Playwright, …) on every
-workspace start.
+which otherwise rebuilds the whole image on every workspace start.
 
 The [`Cache Devcontainer`](.github/workflows/cache-devcontainer.yml) workflow
 runs the same envbuilder and pushes a fully cached image to
 `ghcr.io/bmorton/devcontainer-cache` on every push to `main`, weekly, and on
-manual dispatch. Coder then reuses the cache instead of rebuilding.
+manual dispatch. Coder then reuses the cache instead of rebuilding. Because the
+image is now feature-free, the `envbuilder_cached_image` probe can match it and
+boot directly from the prebuilt image.
 
 ### One-time setup
 
@@ -123,6 +172,14 @@ The cache repo is public, so no pull credentials are needed.
 
 Cache hits require identical build inputs and tooling between CI and Coder:
 the **same envbuilder version**, the **same architecture** (amd64), and the
-**same repo content** (Dockerfile, `devcontainer.json`, feature versions).
+**same repo content** (Dockerfile, `devcontainer.json`, `mise.toml`, `tmux.conf`).
 When you bump the envbuilder version, update it in both
 `.github/workflows/cache-devcontainer.yml` and the Coder template.
+
+## Verifying a build
+
+`scripts/verify-devcontainer.sh` runs inside the built container (CI uses it as
+envbuilder's init script) and asserts: user is `node`, tmux starts with the
+shipped config, the lifecycle completed, `/workspaces` is writable, and every
+mise-pinned tool is installed and runnable from a plain `PATH` lookup.
+`scripts/test-envbuilder.sh` reproduces the Coder build locally with Docker.

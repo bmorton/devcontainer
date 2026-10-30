@@ -1,0 +1,61 @@
+# System-wide tool versions for the devcontainer.
+#
+# This file is baked into the image as /etc/mise/config.toml and installed
+# during the Docker build with `mise install`, so every tool below is present
+# for both the `node` and `root` users, on PATH via mise shims, with no shell
+# activation required.
+#
+# Versions are pinned exactly so the image (and the envbuilder cache built from
+# it) is reproducible. The weekly "Bump mise tools" workflow runs
+# `mise upgrade --bump` and opens a PR when newer versions are available.
+#
+# Projects opened inside the container can add their own mise.toml to override
+# any of these (e.g. a different Go or Ruby) -- project config layers on top of
+# this system config.
+
+[settings]
+# Run pipx-backed tools (azure-cli) through uv instead of pipx.
+pipx.uvx = true
+
+[tools]
+# --- Languages ---------------------------------------------------------------
+go = "1.27.3"
+ruby = "4.0.9"
+rust = "1.99.1"
+uv = "0.13.6"
+
+# --- Go tooling (previously installed by the Go devcontainer feature) --------
+golangci-lint = "2.15.0"
+staticcheck = "2026.2.2"
+"go:golang.org/x/tools/gopls" = "0.24.0"
+"go:github.com/go-delve/delve/cmd/dlv" = "1.27.2"
+"go:golang.org/x/vuln/cmd/govulncheck" = "1.9.0"
+
+# --- Kubernetes --------------------------------------------------------------
+kubectl = "1.37.2"
+helm = "4.3.1"
+minikube = "1.39.0"
+
+# --- Cloud / platform CLIs ---------------------------------------------------
+github-cli = "2.103.3"
+"pipx:azure-cli" = "2.91.0"
+
+# --- Coding agents -----------------------------------------------------------
+# Claude Code self-updates into ~/.local/bin, which is ahead of the mise shims on
+# PATH, so this pin is the floor version in a fresh container, not a ceiling.
+# (mise ignores releases younger than 24h by default, so `mise upgrade --bump`
+# may trail the very latest release by a day.)
+claude = "2.1.312"
+copilot-cli = "1.0.105"
+opencode = "2.2.1"
+pi = "1.4.0"
+
+# --- Utilities ---------------------------------------------------------------
+# witr: "why is this running?" process explainer (was proposed in PR #21).
+witr = "0.3.4"
+
+# --- Terminal ----------------------------------------------------------------
+# Official static builds from github.com/tmux/tmux-builds; far newer than the
+# Debian package and required for allow-passthrough/extended-keys behaviour
+# that Claude Code and iTerm2 rely on.
+tmux = "3.7c"
