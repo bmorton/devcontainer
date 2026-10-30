@@ -118,6 +118,17 @@ if command -v mise >/dev/null 2>&1; then
       fail "$tool is missing or fails to run ($tool $args)"
     fi
   done
+  # Login shells (coder ssh, VS Code terminal, tmux windows) reset PATH via
+  # /etc/profile; make sure the tools are still reachable there, in bash and zsh.
+  for sh in bash zsh; do
+    if command -v "$sh" >/dev/null 2>&1; then
+      if "$sh" -lc 'command -v tmux >/dev/null && command -v go >/dev/null && command -v mise >/dev/null' 2>/dev/null; then
+        pass "tools are on PATH in a $sh login shell"
+      else
+        fail "tools are NOT on PATH in a $sh login shell (PATH=$("$sh" -lc 'echo $PATH' 2>/dev/null))"
+      fi
+    fi
+  done
   if [ -x /usr/local/bin/nsc ]; then
     pass "nsc installed"
   else
