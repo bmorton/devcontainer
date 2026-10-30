@@ -50,6 +50,10 @@ copilot-cli = "1.0.105"
 opencode = "2.2.1"
 pi = "1.4.0"
 
+# --- Utilities ---------------------------------------------------------------
+# witr: "why is this running?" process explainer (was proposed in PR #21).
+witr = "0.3.4"
+
 # --- Terminal ----------------------------------------------------------------
 # Official static builds from github.com/tmux/tmux-builds; far newer than the
 # Debian package and required for allow-passthrough/extended-keys behaviour

@@ -103,7 +103,7 @@ if command -v mise >/dev/null 2>&1; then
   else
     fail "mise reports missing tools:"$'\n'"$missing"
   fi
-  for tool in go ruby cargo kubectl helm gh az claude opencode copilot pi tmux gopls golangci-lint; do
+  for tool in go ruby cargo kubectl helm gh az claude opencode copilot pi witr tmux gopls golangci-lint; do
     if command -v "$tool" >/dev/null 2>&1 && "$tool" --version >/dev/null 2>&1; then
       pass "$tool runs via shim ($(command -v "$tool"))"
     else

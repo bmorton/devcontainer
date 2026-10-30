@@ -27,6 +27,7 @@ My personal devcontainer for VS Code and Coder.
 | Kubernetes | kubectl, helm, minikube |
 | Cloud / platform | GitHub CLI (`gh`), Azure CLI (`az`) |
 | Coding agents | Claude Code (`claude`), GitHub Copilot CLI (`copilot`), opencode, pi |
+| Utilities | witr |
 | Terminal | tmux (official static build, newer than Debian's package) |
 
 The exact versions are in `mise.toml`. Tools are reached through mise shims
