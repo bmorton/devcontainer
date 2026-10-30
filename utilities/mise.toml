@@ -1,0 +1,21 @@
+# Developer tasks for the utilities module. Tools (Go etc.) come from the
+# system config baked into the devcontainer; this file only adds tasks.
+
+[tasks.build]
+description = "Build every utility into ./bin"
+run = "go build -trimpath -o bin/ ./cmd/..."
+
+[tasks.test]
+description = "Run unit tests"
+run = "go test ./..."
+
+[tasks.lint]
+description = "gofmt + go vet"
+run = [
+  'test -z "$(gofmt -l .)" || { echo "gofmt needed:"; gofmt -l .; exit 1; }',
+  "go vet ./...",
+]
+
+[tasks.run]
+description = "Run the bootstrap TUI from source"
+run = "go run ./cmd/bootstrap"

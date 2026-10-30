@@ -15,3 +15,10 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+
+  # Go dependencies of the in-container utilities
+  - package-ecosystem: "gomod"
+    directory: "/utilities"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
