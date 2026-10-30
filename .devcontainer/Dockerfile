@@ -98,7 +98,8 @@ RUN mkdir -p "${MISE_DATA_DIR}" "${GOPATH}" "${RUSTUP_HOME}" "${CARGO_HOME}" \
 USER node
 RUN MISE_YES=1 mise install --jobs 8 \
     && mise reshim \
-    && mise ls --missing | tee /dev/stderr | { ! grep -q .; } \
+    && missing="$(mise ls --missing)" \
+    && if [ -n "$missing" ]; then echo "mise tools missing after install:" "$missing" >&2; exit 1; fi \
     && rm -rf /home/node/.cache/mise
 
 # Stay on the non-root `node` user. envbuilder (used by Coder) picks its target
