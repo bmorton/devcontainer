@@ -55,7 +55,6 @@ without sudo and survive a persisted home directory.
 ## VS Code extensions
 
 - eamodio.gitlens
-- sourcegraph.cody-ai
 - shopify.ruby-lsp
 - aki77.rails-db-schema
 - golang.go

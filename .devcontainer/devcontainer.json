@@ -41,7 +41,6 @@
       "extensions": [
         // General development
         "eamodio.gitlens",
-        "sourcegraph.cody-ai",
 
         // Ruby extensions
         "shopify.ruby-lsp",
@@ -54,9 +53,7 @@
         "ms-kubernetes-tools.vscode-kubernetes-tools",
       ],
       "settings": {
-        // Ruby settings
-        "ruby.useBundler": true,
-        "ruby.format": "rubocop",
+        // Ruby settings (Ruby LSP; the old rebornix `ruby.*` keys were removed)
         "rubyLsp.formatter": "rubocop",
         "rubyLsp.enabledFeatures": {
           "documentHighlights": true,
@@ -67,9 +64,6 @@
           "formatting": true,
           "codeActions": true,
           "diagnostics": true
-        },
-        "ruby.lint": {
-          "rubocop": true
         },
 
         // Go settings
