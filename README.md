@@ -52,6 +52,19 @@ a version for that project; `mise use` / `mise install` work as usual.
 are system-wide and owned by `node`, so `go install` and `cargo install` work
 without sudo and survive a persisted home directory.
 
+## In-container utilities (`utilities/`)
+
+A Go module of small terminal tools that are compiled into the image and
+installed to `/usr/local/bin`. They share one look (bright cyberpunk accents,
+see [`utilities/STYLEGUIDE.md`](utilities/STYLEGUIDE.md)) and one code pattern
+(`cmd/<tool>` → `internal/<tool>`, see [`utilities/AGENTS.md`](utilities/AGENTS.md)).
+
+| Command | What it does |
+| --- | --- |
+| `bootstrap` | Steps through the setup an image can't bake in: git identity, GitHub CLI login and credential helper, Claude Code login, and optionally Copilot, opencode, pi, Namespace and Azure. `enter` runs the fix for the selected item (interactive logins run in your terminal, then get re-checked). `bootstrap --check` prints the same report non-interactively and exits 1 while required items are outstanding; `postCreateCommand` runs it so the report is in the creation log. |
+
+Run `bootstrap` first thing in a new workspace.
+
 ## VS Code extensions
 
 - eamodio.gitlens
@@ -180,6 +193,7 @@ When you bump the envbuilder version, update it in both
 
 `scripts/verify-devcontainer.sh` runs inside the built container (CI uses it as
 envbuilder's init script) and asserts: user is `node`, tmux starts with the
-shipped config, the lifecycle completed, `/workspaces` is writable, and every
-mise-pinned tool is installed and runnable from a plain `PATH` lookup.
+shipped config, the lifecycle completed, `/workspaces` is writable, every
+mise-pinned tool and utility is runnable from a plain `PATH` lookup, and the
+same holds in bash and zsh login shells.
 `scripts/test-envbuilder.sh` reproduces the Coder build locally with Docker.

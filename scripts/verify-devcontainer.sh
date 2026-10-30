@@ -108,7 +108,7 @@ if command -v mise >/dev/null 2>&1; then
   for entry in "go:version" "ruby:--version" "cargo:--version" "kubectl:version --client" \
                "helm:version" "gh:--version" "az:version" "claude:--version" \
                "opencode:--version" "copilot:--version" "pi:--version" "witr:--version" \
-               "tmux:-V" "gopls:version" "golangci-lint:--version"; do
+               "tmux:-V" "gopls:version" "golangci-lint:--version" "bootstrap:--version"; do
     tool="${entry%%:*}"
     args="${entry#*:}"
     # shellcheck disable=SC2086  # intentional word splitting of $args

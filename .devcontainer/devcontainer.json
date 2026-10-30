@@ -6,8 +6,10 @@
 // image. See the Dockerfile header and README for details.
 {
   "name": "bmorton/devcontainer",
+  // Build context is the repo root so the Dockerfile can compile utilities/.
   "build": {
-    "dockerfile": "Dockerfile"
+    "dockerfile": "Dockerfile",
+    "context": ".."
   },
 
   // Connect as the `node` user. Set this explicitly rather than relying on the
@@ -29,7 +31,9 @@
   // Use 'postCreateCommand' to run commands after the container is created.
   // The sentinel file lets CI verify that the lifecycle actually ran to
   // completion (both the devcontainer CLI and envbuilder honor this hook).
-  "postCreateCommand": "kubectl version --client 2>/dev/null || true; touch \"$HOME/.devcontainer-postcreate-done\"",
+  // `bootstrap --check` leaves a status report (logins etc.) in the creation
+  // log; it never fails the lifecycle.
+  "postCreateCommand": "kubectl version --client 2>/dev/null || true; bootstrap --check || true; touch \"$HOME/.devcontainer-postcreate-done\"",
 
   // Start sshd (port 2222) on every container start; this replaces the entrypoint
   // the sshd devcontainer feature used to install. Never fails the start.

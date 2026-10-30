@@ -9,6 +9,10 @@
 # Everything is therefore installed from plain RUN layers here. Tool versions
 # live in mise.toml (installed system-wide with mise); only the few things mise
 # cannot manage (apt packages, nsc, Playwright) are installed directly.
+#
+# The build context is the REPOSITORY ROOT (devcontainer.json: build.context
+# "..", CI: `docker build -f .devcontainer/Dockerfile .`) so the in-container
+# utilities in utilities/ can be compiled here. COPY paths are repo-relative.
 FROM mcr.microsoft.com/devcontainers/typescript-node:26-trixie
 
 USER root
@@ -47,8 +51,8 @@ RUN mkdir -p /workspaces && chown node:node /workspaces
 # ---------------------------------------------------------------------------
 # tmux configuration for both `node` (default) and `root` (used by `coder ssh`).
 # ---------------------------------------------------------------------------
-COPY tmux.conf /home/node/.tmux.conf
-COPY tmux.conf /root/.tmux.conf
+COPY .devcontainer/tmux.conf /home/node/.tmux.conf
+COPY .devcontainer/tmux.conf /root/.tmux.conf
 RUN chown node:node /home/node/.tmux.conf && chown root:root /root/.tmux.conf
 
 # ---------------------------------------------------------------------------
@@ -88,7 +92,7 @@ ENV MISE_DATA_DIR=/usr/local/share/mise \
     RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo
 ENV PATH=${MISE_DATA_DIR}/shims:${GOPATH}/bin:${CARGO_HOME}/bin:${PATH}
-COPY mise.toml /etc/mise/config.toml
+COPY .devcontainer/mise.toml /etc/mise/config.toml
 RUN mkdir -p "${MISE_DATA_DIR}" "${GOPATH}" "${RUSTUP_HOME}" "${CARGO_HOME}" \
     && chown -R node:node "${MISE_DATA_DIR}" "${GOPATH}" "${RUSTUP_HOME}" "${CARGO_HOME}"
 
@@ -99,7 +103,7 @@ RUN mkdir -p "${MISE_DATA_DIR}" "${GOPATH}" "${RUSTUP_HOME}" "${CARGO_HOME}" \
 # (CI's init script is non-login and never noticed). Export the tool dirs and
 # mise variables from a profile.d snippet and source it from the interactive rc
 # files too, exactly as the devcontainer features used to do.
-COPY 10-devcontainer-tools.sh /etc/profile.d/10-devcontainer-tools.sh
+COPY .devcontainer/10-devcontainer-tools.sh /etc/profile.d/10-devcontainer-tools.sh
 RUN chmod 0644 /etc/profile.d/10-devcontainer-tools.sh \
     && printf '\n. /etc/profile.d/10-devcontainer-tools.sh\n' >> /etc/bash.bashrc \
     && printf '\n. /etc/profile.d/10-devcontainer-tools.sh\n' >> /etc/zsh/zshrc
@@ -113,6 +117,21 @@ RUN MISE_YES=1 mise install --jobs 8 \
     && missing="$(mise ls --missing)" \
     && if [ -n "$missing" ]; then echo "mise tools missing after install:" "$missing" >&2; exit 1; fi \
     && rm -rf /home/node/.cache/mise
+
+# ---------------------------------------------------------------------------
+# In-container utilities (utilities/): Go TUIs such as `bootstrap`, which walks
+# through logins and identity on a fresh container. Built with the mise-managed
+# Go as `node` so the module cache lands in node-owned /go; the binaries are
+# then installed system-wide. See utilities/AGENTS.md for the pattern.
+# ---------------------------------------------------------------------------
+COPY --chown=node:node utilities /usr/local/src/devcontainer-utilities
+RUN cd /usr/local/src/devcontainer-utilities \
+    && go build -trimpath -ldflags="-s -w" -o /tmp/devcontainer-utilities-bin/ ./cmd/... \
+    && go clean -cache \
+    && rm -rf /home/node/.cache/go-build
+USER root
+RUN install -m 0755 /tmp/devcontainer-utilities-bin/* /usr/local/bin/ \
+    && rm -rf /tmp/devcontainer-utilities-bin
 
 # Stay on the non-root `node` user. envbuilder (used by Coder) picks its target
 # user from the last `USER` directive when `containerUser`/`remoteUser` are not
