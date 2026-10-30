@@ -55,6 +55,9 @@ without sudo and survive a persisted home directory.
 ## VS Code extensions
 
 - eamodio.gitlens
+- github.vscode-pull-request-github
+- github.vscode-github-actions
+- redhat.vscode-yaml
 - shopify.ruby-lsp
 - aki77.rails-db-schema
 - golang.go
