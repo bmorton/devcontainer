@@ -103,11 +103,19 @@ if command -v mise >/dev/null 2>&1; then
   else
     fail "mise reports missing tools:"$'\n'"$missing"
   fi
-  for tool in go ruby cargo kubectl helm gh az claude opencode copilot pi witr tmux gopls golangci-lint; do
-    if command -v "$tool" >/dev/null 2>&1 && "$tool" --version >/dev/null 2>&1; then
+  # Each entry is "<command>:<args that print a version>" since not every tool
+  # accepts --version.
+  for entry in "go:version" "ruby:--version" "cargo:--version" "kubectl:version --client" \
+               "helm:version" "gh:--version" "az:version" "claude:--version" \
+               "opencode:--version" "copilot:--version" "pi:--version" "witr:--version" \
+               "tmux:-V" "gopls:version" "golangci-lint:--version"; do
+    tool="${entry%%:*}"
+    args="${entry#*:}"
+    # shellcheck disable=SC2086  # intentional word splitting of $args
+    if command -v "$tool" >/dev/null 2>&1 && "$tool" $args >/dev/null 2>&1; then
       pass "$tool runs via shim ($(command -v "$tool"))"
     else
-      fail "$tool is missing or fails to run"
+      fail "$tool is missing or fails to run ($tool $args)"
     fi
   done
   if [ -x /usr/local/bin/nsc ]; then
