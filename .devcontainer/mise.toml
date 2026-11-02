@@ -45,9 +45,9 @@ github-cli = "2.103.3"
 # PATH, so this pin is the floor version in a fresh container, not a ceiling.
 # (mise ignores releases younger than 24h by default, so `mise upgrade --bump`
 # may trail the very latest release by a day.)
-claude = "2.1.312"
+claude = "2.1.316"
 copilot-cli = "1.0.105"
-opencode = "2.2.1"
+opencode = { version = "2.2.5", allow_builds = ["@opencode/cli"] }
 pi = "1.4.0"
 
 # --- Utilities ---------------------------------------------------------------
